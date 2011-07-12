@@ -1,0 +1,4 @@
+{application, gen_listener_tcp,
+  [{description, "Generic TCP Server"},
+   {applications, [kernel, stdlib]}]
+}.
