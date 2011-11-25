@@ -29,6 +29,7 @@
 	]).
 
 -record(listener_state, {
+	  verbose = false :: boolean(),
 	  socket,
 	  acceptor,
 	  mod,
@@ -94,11 +95,15 @@ init([{'__gen_listener_tcp_mod', Module} | InitArgs]) ->
 
     case Module:init(InitArgs) of
         {ok, {Port, Options}, ModState} ->
-            {ok, ListenSocket} = gen_tcp:listen(Port, Options),
+			Verbose = proplists:get_bool(verbose, Options),
+			io:format("Verbose: ~w~n", [Verbose]),
+			Options0 = proplists:delete(verbose, Options),
 
-            error_logger:info_report([listening_started, {port, Port}, {lsock, ListenSocket} | Options]), 
+            {ok, ListenSocket} = gen_tcp:listen(Port, Options0),
 
-            {ok, create_acceptor(ListenSocket, Module, ModState)};
+            info_report(Verbose, [listening_started, {port, Port}, {lsock, ListenSocket} | Options0]), 
+
+            {ok, create_acceptor(ListenSocket, Module, ModState, Verbose)};
         ignore ->
             ignore;
         {stop, Reason} ->
@@ -141,11 +146,11 @@ handle_cast(Request, #listener_state{mod=Module, mod_state=ModState}=St) ->
     end.
 
 
-handle_info({inet_async, LSock, ARef, {ok, ClientSock}}, #listener_state{socket=LSock, acceptor=ARef, mod=Module, mod_state=ModState}=St) ->
-    error_logger:info_report([new_connection, {csock, ClientSock}, {lsock, LSock}, {async_ref, ARef}]),
+handle_info({inet_async, LSock, ARef, {ok, ClientSock}}, #listener_state{verbose = Verbose, socket=LSock, acceptor=ARef, mod=Module, mod_state=ModState}=St) ->
+    info_report(Verbose, [new_connection, {csock, ClientSock}, {lsock, LSock}, {async_ref, ARef}]),
     patch_client_socket(ClientSock, LSock),
 
-    error_logger:info_report([handling_accept, {module, Module}, {module_state, ModState}]),
+    info_report(Verbose, [handling_accept, {module, Module}, {module_state, ModState}]),
 
     try
         case Module:handle_accept(ClientSock, ModState) of
@@ -160,13 +165,13 @@ handle_info({inet_async, LSock, ARef, {ok, ClientSock}}, #listener_state{socket=
         end
     catch
         Type:Exception ->
-            error_logger:error_report([gen_listener_tcp, {action, handle_accept}, {type, Type}, {exception, Exception}]),
+            error_report(Verbose, [gen_listener_tcp, {action, handle_accept}, {type, Type}, {exception, Exception}]),
             gen_tcp:close(ClientSock),
             {noreply, St}
     end;
 
-handle_info({inet_async, LSock, ARef, Error}, #listener_state{socket=LSock, acceptor=ARef}=ListenerState) ->
-    error_logger:error_report([acceptor_error, {reason, Error}, {lsock, LSock}, {async_ref, ARef}]),
+handle_info({inet_async, LSock, ARef, Error}, #listener_state{verbose = Verbose, socket=LSock, acceptor=ARef}=ListenerState) ->
+    error_report(Verbose, [acceptor_error, {reason, Error}, {lsock, LSock}, {async_ref, ARef}]),
     {stop, Error, ListenerState};
 
 handle_info(Info, #listener_state{mod=Module, mod_state=ModState}=St) ->
@@ -181,8 +186,8 @@ handle_info(Info, #listener_state{mod=Module, mod_state=ModState}=St) ->
             {stop, Reason, St#listener_state{mod_state=NewModState}}
     end.
 
-terminate(Reason, #listener_state{mod=Module, mod_state=ModState}=St) ->
-    error_logger:info_report([listener_terminating, {reason, Reason}]),
+terminate(Reason, #listener_state{verbose = Verbose, mod=Module, mod_state=ModState}=St) ->
+    error_logger:info_report(Verbose, [listener_terminating, {reason, Reason}]),
     gen_tcp:close(St#listener_state.socket),
     Module:terminate(Reason, ModState).
 
@@ -201,10 +206,22 @@ patch_client_socket(CSock, LSock) when is_port(CSock), is_port(LSock) ->
     ok.
 
 create_acceptor(St) when is_record(St, listener_state) ->
-    create_acceptor(St#listener_state.socket, St#listener_state.mod, St#listener_state.mod_state).
+    create_acceptor(St#listener_state.socket, St#listener_state.mod, St#listener_state.mod_state, St#listener_state.verbose).
 
-create_acceptor(ListenSocket, Module, ModState) when is_port(ListenSocket) ->
+create_acceptor(ListenSocket, Module, ModState, Verbose) when is_port(ListenSocket) ->
     {ok, Ref} = prim_inet:async_accept(ListenSocket, -1), 
 
-    error_logger:info_report(waiting_for_connection), 
-    #listener_state{socket=ListenSocket, acceptor=Ref, mod=Module, mod_state=ModState}.
+    error_logger:info_report(Verbose, waiting_for_connection), 
+    #listener_state{verbose = Verbose, socket=ListenSocket, acceptor=Ref, mod=Module, mod_state=ModState}.
+
+info_report(_Verbose = false, _Report) ->
+	ok;
+info_report(Verbose, Report)
+  when Verbose == true; Verbose == info ->
+	error_logger:info_report(Report).
+
+error_report(_Verbose = false, _Report) ->
+	ok;
+error_report(Verbose, Report)
+  when Verbose == true; Verbose == error ->
+	error_logger:error_report(Report).
