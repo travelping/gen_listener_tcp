@@ -95,9 +95,8 @@ init([{'__gen_listener_tcp_mod', Module} | InitArgs]) ->
 
     case Module:init(InitArgs) of
         {ok, {Port, Options}, ModState} ->
-			Verbose = proplists:get_bool(verbose, Options),
-			io:format("Verbose: ~w~n", [Verbose]),
-			Options0 = proplists:delete(verbose, Options),
+            Verbose = proplists:get_bool(verbose, Options),
+            Options0 = proplists:delete(verbose, Options),
 
             {ok, ListenSocket} = gen_tcp:listen(Port, Options0),
 
