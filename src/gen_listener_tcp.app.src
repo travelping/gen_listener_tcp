@@ -1,5 +1,6 @@
 {application, gen_listener_tcp,
   [{description, "Generic TCP Server"},
+   {vsn, "0.2"},
    {registered, []},
    {applications, [kernel, stdlib]},
    {env, []}]
