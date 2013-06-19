@@ -1,11 +1,22 @@
+.PHONY: compile test dialyzer clean
 
-#.PHONY: test
+APPS = kernel stdlib
 
-all:
-	erl -pa ebin -make
+compile: rebar
+	@./rebar compile
 
-test: all
-	cd test ; ./test.escript
+test: rebar
+	@./rebar eunit
 
-run_echo: all
-	erl -pa ebin -s echo_server
+dialyzer: build.plt compile
+	dialyzer --plt $< ebin
+
+build.plt:
+	dialyzer -q --build_plt --apps $(APPS) --output_plt $@
+
+clean: rebar
+	@./rebar clean
+
+rebar:
+	@wget -q http://cloud.github.com/downloads/basho/rebar/rebar
+	@chmod u+x rebar
