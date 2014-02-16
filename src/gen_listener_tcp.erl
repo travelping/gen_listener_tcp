@@ -1,8 +1,6 @@
 -module(gen_listener_tcp).
 -behaviour(gen_server).
 
--export([behaviour_info/1]).
-
 -export([
          start/3,
          start/4,
@@ -36,17 +34,14 @@
           mod_state
          }).
 
+-callback init([any(),...])      -> {'ok',{_,_},{_,_}}.
+-callback handle_accept(_,{_,_}) -> {'noreply',{_,_}}.
+-callback handle_call(_,_,_)     -> {'reply',{'illegal_request',_},_}.
+-callback handle_cast(_,_)       -> {'noreply',_}.
+-callback handle_info(_,_)       -> {'noreply',_}.
+-callback terminate(_,_)         -> 'ok'.
+-callback code_change(_,_,_)     -> {'ok',_}.
 
-behaviour_info(callbacks) ->
-    [
-     {init, 1},
-     {handle_accept, 2},
-     {handle_call, 3},
-     {handle_cast, 2},
-     {handle_info, 2},
-     {terminate, 2},
-     {code_change, 3}
-    ].
 
 
 start_link(Name, Module, InitArgs, Options) ->
