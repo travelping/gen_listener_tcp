@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	mkdir -p ebin
+	erl -make
+	cp src/gen_listener_tcp.app.src ebin/gen_listener_tcp.app
+
+# No tests is present at now
+override_dh_auto_test:
+
+# Implement staged installation
+DESTDIR = debian/erlang-gen-listener-tcp
+VERSION = $(shell erl -noinput -eval '{ok,[{_,_,L}]}=file:consult("src/gen_listener_tcp.app.src"),[V]=[V||{vsn,V}<-L],io:format("~s~n",[V]),halt()')
+ERL_APP_DESTDIR = $(DESTDIR)/usr/lib/erlang/lib/gen_listener_tcp-$(VERSION)/ebin
+override_dh_install:
+	install -m 755 -d $(ERL_APP_DESTDIR)
+	install -m 640 ebin/*.app ebin/*.beam $(ERL_APP_DESTDIR)

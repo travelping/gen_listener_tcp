@@ -1,0 +1,5 @@
+erlang-gen-listener-tcp (0.2-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Aleksey Morarash <aleksey.morarash@gmail.com>  Fri, 04 Jul 2014 14:04:00 +0300
