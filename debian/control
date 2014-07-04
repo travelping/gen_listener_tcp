@@ -1,0 +1,12 @@
+Source: erlang-gen-listener-tcp
+Section: development
+Priority: extra
+Maintainer: Aleksey Morarash <aleksey.morarash@gmail.com>
+Build-Depends: debhelper (>= 8.0.0), erlang-base, erlang-tools
+Standards-Version: 3.9.3
+
+Package: erlang-gen-listener-tcp
+Architecture: all
+Depends: erlang-base
+Description: Generic TCP Server in Erlang/OTP
+ A generic tcp listener process adhering to OTP design principles.
