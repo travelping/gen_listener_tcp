@@ -28,6 +28,10 @@
 	 code_change/3
 	]).
 
+-export([
+	 sockname/1
+	]).
+
 -record(listener_state, {
 	  verbose = false :: boolean(),
 	  socket,
@@ -88,6 +92,9 @@ abcast(Nodes, Name, Request) ->
 reply(Client, Reply) ->
     gen_server:reply(Client, Reply).
 
+sockname(ServerRef) ->
+    call(ServerRef, '__gen_listener_tcp_mod_sockname').
+
 % gen_server callbacks
 
 init([{'__gen_listener_tcp_mod', Module} | InitArgs]) ->
@@ -111,6 +118,10 @@ init([{'__gen_listener_tcp_mod', Module} | InitArgs]) ->
             {stop, Other}
     end.
 
+
+handle_call('__gen_listener_tcp_mod_sockname', _From, #listener_state{socket=Socket}=St) ->
+    Reply = inet:sockname(Socket),
+    {reply, Reply, St};
 
 handle_call(Request, From, #listener_state{mod=Module, mod_state=ModState}=St) ->
     case Module:handle_call(Request, From, ModState) of 
