@@ -197,7 +197,7 @@ handle_info(Info, #listener_state{mod=Module, mod_state=ModState}=St) ->
     end.
 
 terminate(Reason, #listener_state{verbose = Verbose, mod=Module, mod_state=ModState}=St) ->
-    error_logger:info_report(Verbose, [listener_terminating, {reason, Reason}]),
+    info_report(Verbose, [listener_terminating, {reason, Reason}]),
     gen_tcp:close(St#listener_state.socket),
     Module:terminate(Reason, ModState).
 
@@ -221,7 +221,7 @@ create_acceptor(St) when is_record(St, listener_state) ->
 create_acceptor(ListenSocket, Module, ModState, Verbose) when is_port(ListenSocket) ->
     {ok, Ref} = prim_inet:async_accept(ListenSocket, -1), 
 
-    error_logger:info_report(Verbose, waiting_for_connection), 
+    info_report(Verbose, waiting_for_connection),
     #listener_state{verbose = Verbose, socket=ListenSocket, acceptor=Ref, mod=Module, mod_state=ModState}.
 
 info_report(_Verbose = false, _Report) ->
