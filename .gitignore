@@ -4,3 +4,4 @@
 test/logs/*
 /dist/
 /ebin/*.app
+.rebar/
