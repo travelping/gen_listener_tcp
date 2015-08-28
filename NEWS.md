@@ -1,7 +1,12 @@
 gen_listener_tcp
 ================
 
-Changes with 0.3.0 - 16 Oct 2013
+Changes with 0.3.1 - 28 Aug 2015
+--------------------------------
+
+* use rebar instead of makefile
+
+Changes with 0.3.0 - 16 Oct 2014
 --------------------------------
 
 * resync with internal repo
