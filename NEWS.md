@@ -1,6 +1,11 @@
 gen_listener_tcp
 ================
 
+Changes with 0.3.2 - 04 Sep 2015
+--------------------------------
+
+* publish to hex.pm
+
 Changes with 0.3.1 - 28 Aug 2015
 --------------------------------
 
